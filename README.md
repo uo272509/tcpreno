@@ -17,7 +17,12 @@ Options:
 ```
 
 ## Example
-`tcpreno --cycles 25 --threshold 8 -l 10 -l 14 -l 20 --algorithm "Reno"`
+> Draw 25 cycles using the algorithm "TCP Reno", where the threshold starts at 8 and
+packets are lost in the cycles 10, 14 and 20
+
+```bash
+tcpreno --cycles 25 --threshold 8 -l 10 -l 14 -l 20 --algorithm "Reno"
+```
 
 # Warning
 The algorithm used does not reflect the real-world version, this is merely 
