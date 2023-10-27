@@ -46,17 +46,15 @@ fn main() {
             } else {
                 window_size = 1;
             }
-        } else {
-            if window_size < threshold {
-                window_size *= 2;
+        } else if window_size < threshold {
+            window_size *= 2;
 
-                if window_size > threshold {
-                    window_size = threshold;
-                }
-            } else {
-                window_size += 1;
-                threshold = window_size;
+            if window_size > threshold {
+                window_size = threshold;
             }
+        } else {
+            window_size += 1;
+            threshold = window_size;
         }
 
         // agregar valores de tamaño de ventana y umbral al vector correspondiente
