@@ -1,7 +1,7 @@
-use eframe::egui;
-use egui_extras::{TableBuilder, Column};
-use egui_plot::{Line, LineStyle, Legend, VLine};
 use crate::algorithm;
+use eframe::egui;
+use egui_extras::{Column, TableBuilder};
+use egui_plot::{Legend, Line, LineStyle, VLine};
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Algorithm {
@@ -13,8 +13,6 @@ impl From<String> for Algorithm {
     fn from(s: String) -> Self {
         if s.to_ascii_lowercase().trim().eq("reno") {
             Algorithm::Reno
-        } else if s.to_ascii_lowercase().trim().eq("tahoe") {
-            Algorithm::Tahoe
         } else {
             Algorithm::Tahoe
         }
@@ -23,10 +21,7 @@ impl From<String> for Algorithm {
 
 impl Algorithm {
     pub fn is_reno(&self) -> bool {
-        match self {
-            Self::Reno => true,
-            _ => false,
-        }
+        matches!(self, Self::Reno)
     }
 }
 
@@ -42,16 +37,16 @@ pub struct App {
 
 impl Default for App {
     fn default() -> Self {
-        let (data_window, data_threshold) = algorithm(
-            1,
-            8,
-            25,
-            vec![10, 14, 20],
-            true,
-        );
+        let (data_window, data_threshold) = algorithm(1, 8, 25, vec![10, 14, 20], true);
 
-        let window_data_zipped: Vec<[f64; 2]> = (0..data_window.len()).zip(data_window.iter()).map(|(x, y)| [x as f64, *y as f64]).collect();
-        let threshold_data_zipped: Vec<[f64; 2]> = (0..data_threshold.len()).zip(data_threshold.iter()).map(|(x, y)| [x as f64, *y as f64]).collect();
+        let window_data_zipped: Vec<[f64; 2]> = (0..data_window.len())
+            .zip(data_window.iter())
+            .map(|(x, y)| [x as f64, *y as f64])
+            .collect();
+        let threshold_data_zipped: Vec<[f64; 2]> = (0..data_threshold.len())
+            .zip(data_threshold.iter())
+            .map(|(x, y)| [x as f64, *y as f64])
+            .collect();
 
         Self {
             cycles: 25,
@@ -73,16 +68,17 @@ impl App {
         losses: Vec<u16>,
         algo: Algorithm,
     ) -> Self {
-        let (data_window, data_threshold) = algorithm(
-            window,
-            threshold,
-            cycles,
-            losses.clone(),
-            algo.is_reno(),
-        );
+        let (data_window, data_threshold) =
+            algorithm(window, threshold, cycles, losses.clone(), algo.is_reno());
 
-        let window_data_zipped: Vec<[f64; 2]> = (0..data_window.len()).zip(data_window.iter()).map(|(x, y)| [x as f64, *y as f64]).collect();
-        let threshold_data_zipped: Vec<[f64; 2]> = (0..data_threshold.len()).zip(data_threshold.iter()).map(|(x, y)| [x as f64, *y as f64]).collect();
+        let window_data_zipped: Vec<[f64; 2]> = (0..data_window.len())
+            .zip(data_window.iter())
+            .map(|(x, y)| [x as f64, *y as f64])
+            .collect();
+        let threshold_data_zipped: Vec<[f64; 2]> = (0..data_threshold.len())
+            .zip(data_threshold.iter())
+            .map(|(x, y)| [x as f64, *y as f64])
+            .collect();
 
         Self {
             cycles,
@@ -104,8 +100,14 @@ impl App {
             self.algorithm.is_reno(),
         );
 
-        self.window_size_data = (0..data_window.len()).zip(data_window.iter()).map(|(x, y)| [x as f64, *y as f64]).collect();
-        self.threshold_data = (0..data_threshold.len()).zip(data_threshold.iter()).map(|(x, y)| [x as f64, *y as f64]).collect();
+        self.window_size_data = (0..data_window.len())
+            .zip(data_window.iter())
+            .map(|(x, y)| [x as f64, *y as f64])
+            .collect();
+        self.threshold_data = (0..data_threshold.len())
+            .zip(data_threshold.iter())
+            .map(|(x, y)| [x as f64, *y as f64])
+            .collect();
     }
 }
 
@@ -162,9 +164,8 @@ impl eframe::App for App {
                 })
                 .max_decimals(0)
                 .text("window"),
-                )
-                .on_hover_text_at_pointer("The initial window size.");
-
+            )
+            .on_hover_text_at_pointer("The initial window size.");
 
             ui.horizontal(|ui| {
                 ui.label("Algorithm:");
@@ -180,64 +181,75 @@ impl eframe::App for App {
                         header.col(|ui| {
                             ui.heading("Cycle");
                         });
-                        header.col(|_ui| {
-                        });
+                        header.col(|_ui| {});
                     })
-                .body(|mut body| {
-                    let mut update = false;
+                    .body(|mut body| {
+                        let mut update = false;
 
-                    for (i, loss) in self.losses.clone().iter().enumerate() {
+                        for (i, loss) in self.losses.clone().iter().enumerate() {
+                            body.row(30.0, |mut row| {
+                                row.col(|ui| {
+                                    ui.add(
+                                        egui::DragValue::from_get_set(|v| {
+                                            if let Some(value) = v {
+                                                self.losses[i] = value as u16;
+                                                update = true;
+                                                value
+                                            } else {
+                                                *loss as f64
+                                            }
+                                        })
+                                        .speed(1.0)
+                                        .clamp_range(0.0..=self.cycles as f64),
+                                    );
+                                });
+
+                                row.col(|ui| {
+                                    if ui.button("🗑").clicked() {
+                                        self.losses.remove(i);
+                                        update = true;
+                                    }
+                                });
+                            });
+                        }
+
                         body.row(30.0, |mut row| {
                             row.col(|ui| {
-                                ui.add(egui::DragValue::from_get_set(|v| {
-                                    if let Some(value) = v {
-                                        self.losses[i] = value as u16;
-                                        update = true;
-                                        value
-                                    } else {
-                                        *loss as f64
-                                    }
-                                }).speed(1.0).clamp_range(0.0..=self.cycles as f64));
-                            });
-
-                            row.col(|ui| {
-                                if ui.button("🗑").clicked() {
-                                    self.losses.remove(i);
+                                if ui.button("Add a loss").clicked() {
+                                    self.losses.sort_unstable();
+                                    self.losses.push(self.losses[self.losses.len() - 1] + 1);
                                     update = true;
                                 }
                             });
                         });
-                    }
 
-                    body.row(30.0, |mut row| {
-                        row.col(|ui|{
-                            if ui.button("Add a loss").clicked() {
-                                self.losses.sort_unstable();
-                                self.losses.push(self.losses[self.losses.len()-1] + 1);
-                                update = true;
-                            }
-                        });
+                        if update {
+                            self.update_data();
+                        }
                     });
-
-                    if update {
-                        self.update_data();
-                    }
-                });
             });
         });
 
         egui::CentralPanel::default().show(ctx, |ui| {
             egui_plot::Plot::new("example_plot")
-                .height(ui.available_height()/2.0)
+                .height(ui.available_height() / 2.0)
                 .show_axes(true)
                 .legend(Legend::default())
                 .show(ui, |plot_ui| {
                     for loss in &self.losses {
-                        plot_ui.vline(VLine::new(*loss as f64).color(egui::Color32::from_rgb(210,189,57)).style(LineStyle::dotted_dense()));
+                        plot_ui.vline(
+                            VLine::new(*loss as f64)
+                                .color(egui::Color32::from_rgb(210, 189, 57))
+                                .style(LineStyle::dotted_dense()),
+                        );
                     }
 
                     plot_ui.line(Line::new(self.window_size_data.clone()).name("Window size"));
-                    plot_ui.line(Line::new(self.threshold_data.clone()).name("Threshold").style(LineStyle::dashed_dense()));
+                    plot_ui.line(
+                        Line::new(self.threshold_data.clone())
+                            .name("Threshold")
+                            .style(LineStyle::dashed_dense()),
+                    );
                 });
         });
     }
