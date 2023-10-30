@@ -1,5 +1,6 @@
 use eframe::egui;
-use egui_plot::Plot;
+use egui_plot::{Line, LineStyle, Legend, VLine};
+use crate::algorithm;
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Algorithm {
@@ -34,7 +35,8 @@ pub struct App {
     pub window: u16,
     pub losses: Vec<usize>,
     pub algorithm: Algorithm,
-    pub plot: Option<Plot>,
+    pub window_size_data: Vec<[f64; 2]>,
+    pub threshold_data: Vec<[f64; 2]>,
 }
 
 impl App {
@@ -43,28 +45,55 @@ impl App {
         threshold: u16,
         window: u16,
         losses: Vec<usize>,
-        algorithm: Algorithm,
+        algo: Algorithm,
     ) -> Self {
+        let (data_window, data_threshold) = algorithm(
+            window,
+            threshold,
+            cycles,
+            losses.clone(),
+            algo.is_reno(),
+        );
+
+        let window_data_zipped: Vec<[f64; 2]> = (0..data_window.len()).zip(data_window.iter()).map(|(x, y)| [x as f64, *y as f64]).collect();
+        let threshold_data_zipped: Vec<[f64; 2]> = (0..data_threshold.len()).zip(data_threshold.iter()).map(|(x, y)| [x as f64, *y as f64]).collect();
+
         Self {
             cycles,
             threshold,
             window,
             losses,
-            algorithm,
-            plot: None,
+            algorithm: algo,
+            window_size_data: window_data_zipped,
+            threshold_data: threshold_data_zipped,
         }
+    }
+
+    fn update_data(&mut self) {
+        let (data_window, data_threshold) = algorithm(
+            self.window,
+            self.threshold,
+            self.cycles,
+            self.losses.clone(),
+            self.algorithm.is_reno(),
+        );
+
+        self.window_size_data = (0..data_window.len()).zip(data_window.iter()).map(|(x, y)| [x as f64, *y as f64]).collect();
+        self.threshold_data = (0..data_threshold.len()).zip(data_threshold.iter()).map(|(x, y)| [x as f64, *y as f64]).collect();
     }
 }
 
 impl eframe::App for App {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui::SidePanel::left("Options").show(ctx, |ui| {
+            ui.heading("Options");
+
             ui.add(
-                egui::Slider::from_get_set(0.0..=50.0, |v| {
+                egui::Slider::from_get_set(5.0..=50.0, |v| {
                     if let Some(value) = v {
                         self.cycles = value as usize;
 
-                        // TODO: Update the plot here with the new
+                        self.update_data();
 
                         value
                     } else {
@@ -77,11 +106,11 @@ impl eframe::App for App {
             .on_hover_text_at_pointer("The number of cycles to simulate.");
 
             ui.add(
-                egui::Slider::from_get_set(0.0..=50.0, |v| {
+                egui::Slider::from_get_set(1.0..=50.0, |v| {
                     if let Some(value) = v {
                         self.threshold = value as u16;
 
-                        // TODO: Update the plot here with the new
+                        self.update_data();
 
                         value
                     } else {
@@ -94,11 +123,11 @@ impl eframe::App for App {
             .on_hover_text_at_pointer("The initial threshold.");
 
             ui.add(
-                egui::Slider::from_get_set(0.0..=100.0, |v| {
+                egui::Slider::from_get_set(1.0..=100.0, |v| {
                     if let Some(value) = v {
                         self.window = value as u16;
 
-                        // TODO: Update the plot here with the new
+                        self.update_data();
 
                         value
                     } else {
@@ -121,7 +150,18 @@ impl eframe::App for App {
         });
 
         egui::CentralPanel::default().show(ctx, |ui| {
-            ui.heading("My egui Application");
+            egui_plot::Plot::new("example_plot")
+                .height(ui.available_height()/2.0)
+                .show_axes(true)
+                .legend(Legend::default())
+                .show(ui, |plot_ui| {
+                    for loss in &self.losses {
+                        plot_ui.vline(VLine::new(*loss as f64).color(egui::Color32::from_rgb(210,189,57)).style(LineStyle::dotted_dense()));
+                    }
+
+                    plot_ui.line(Line::new(self.window_size_data.clone()).name("Window size"));
+                    plot_ui.line(Line::new(self.threshold_data.clone()).name("Threshold").style(LineStyle::dashed_dense()));
+                });
         });
     }
 }
