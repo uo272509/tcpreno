@@ -40,6 +40,31 @@ pub struct App {
     pub threshold_data: Vec<[f64; 2]>,
 }
 
+impl Default for App {
+    fn default() -> Self {
+        let (data_window, data_threshold) = algorithm(
+            1,
+            8,
+            25,
+            vec![10, 14, 20],
+            true,
+        );
+
+        let window_data_zipped: Vec<[f64; 2]> = (0..data_window.len()).zip(data_window.iter()).map(|(x, y)| [x as f64, *y as f64]).collect();
+        let threshold_data_zipped: Vec<[f64; 2]> = (0..data_threshold.len()).zip(data_threshold.iter()).map(|(x, y)| [x as f64, *y as f64]).collect();
+
+        Self {
+            cycles: 25,
+            threshold: 8,
+            window: 1,
+            losses: vec![10, 14, 20],
+            algorithm: Algorithm::Reno,
+            window_size_data: window_data_zipped,
+            threshold_data: threshold_data_zipped,
+        }
+    }
+}
+
 impl App {
     pub fn new(
         cycles: usize,

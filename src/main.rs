@@ -2,6 +2,7 @@ use clap::{command, Parser};
 use eframe::egui;
 use tcpreno::App;
 
+#[cfg(not(target_arch = "wasm32"))]
 #[derive(Parser, Debug)]
 #[command(author, version, about)]
 struct Cli {
@@ -34,6 +35,7 @@ struct Cli {
     algorithm: String,
 }
 
+#[cfg(not(target_arch = "wasm32"))]
 fn main() -> Result<(), eframe::Error> {
     let args = Cli::parse();
 
@@ -65,4 +67,31 @@ fn main() -> Result<(), eframe::Error> {
             ))
         }),
     )
+}
+
+#[cfg(target_arch = "wasm32")]
+fn main() {
+    let web_options = eframe::WebOptions::default();
+    wasm_bindgen_futures::spawn_local(async {
+        eframe::WebRunner::new()
+            .start(
+                "Canvas", // hardcode it
+                web_options,
+                Box::new(move |cc| {
+                    //Increase the font size
+                    let mut st = (*egui::Context::default().style()).clone();
+                    st.override_font_id = Some(egui::FontId::monospace(14.0));
+                    st.spacing.slider_width = 250.0;
+                    st.spacing.button_padding = egui::Vec2::new(10.0, 5.0);
+                    st.spacing.item_spacing = egui::Vec2::new(10.0, 10.0);
+                    cc.egui_ctx.set_style(st);
+
+                    // This gives us image support:
+                    egui_extras::install_image_loaders(&cc.egui_ctx);
+                    Box::<App>::default()
+                }),
+            )
+            .await
+            .expect("failed to start eframe");
+    });
 }
