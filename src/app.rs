@@ -1,4 +1,5 @@
 use eframe::egui;
+use egui_extras::{TableBuilder, Column};
 use egui_plot::{Line, LineStyle, Legend, VLine};
 use crate::algorithm;
 
@@ -33,7 +34,7 @@ pub struct App {
     pub cycles: usize,
     pub threshold: u16,
     pub window: u16,
-    pub losses: Vec<usize>,
+    pub losses: Vec<u16>,
     pub algorithm: Algorithm,
     pub window_size_data: Vec<[f64; 2]>,
     pub threshold_data: Vec<[f64; 2]>,
@@ -44,7 +45,7 @@ impl App {
         cycles: usize,
         threshold: u16,
         window: u16,
-        losses: Vec<usize>,
+        losses: Vec<u16>,
         algo: Algorithm,
     ) -> Self {
         let (data_window, data_threshold) = algorithm(
@@ -136,16 +137,67 @@ impl eframe::App for App {
                 })
                 .max_decimals(0)
                 .text("window"),
-            )
-            .on_hover_text_at_pointer("The initial window size.");
+                )
+                .on_hover_text_at_pointer("The initial window size.");
 
-            ui.button("Edit losses")
-                .on_hover_text_at_pointer("Edit the list of losses");
 
             ui.horizontal(|ui| {
                 ui.label("Algorithm:");
                 ui.radio_value(&mut self.algorithm, Algorithm::Reno, "Reno");
                 ui.radio_value(&mut self.algorithm, Algorithm::Tahoe, "Tahoe");
+            });
+
+            ui.collapsing("Edit cycles where there are losses", |ui| {
+                TableBuilder::new(ui)
+                    .column(Column::auto().resizable(true))
+                    .column(Column::remainder())
+                    .header(20.0, |mut header| {
+                        header.col(|ui| {
+                            ui.heading("Cycle");
+                        });
+                        header.col(|_ui| {
+                        });
+                    })
+                .body(|mut body| {
+                    let mut update = false;
+
+                    for (i, loss) in self.losses.clone().iter().enumerate() {
+                        body.row(30.0, |mut row| {
+                            row.col(|ui| {
+                                ui.add(egui::DragValue::from_get_set(|v| {
+                                    if let Some(value) = v {
+                                        self.losses[i] = value as u16;
+                                        update = true;
+                                        value
+                                    } else {
+                                        *loss as f64
+                                    }
+                                }).speed(1.0).clamp_range(0.0..=self.cycles as f64));
+                            });
+
+                            row.col(|ui| {
+                                if ui.button("🗑").clicked() {
+                                    self.losses.remove(i);
+                                    update = true;
+                                }
+                            });
+                        });
+                    }
+
+                    body.row(30.0, |mut row| {
+                        row.col(|ui|{
+                            if ui.button("Add a loss").clicked() {
+                                self.losses.sort_unstable();
+                                self.losses.push(self.losses[self.losses.len()-1] + 1);
+                                update = true;
+                            }
+                        });
+                    });
+
+                    if update {
+                        self.update_data();
+                    }
+                });
             });
         });
 

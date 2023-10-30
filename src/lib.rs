@@ -6,7 +6,7 @@ pub fn algorithm(
     initial_window_size: u16,
     initial_threshold: u16,
     cycles: usize,
-    losses: Vec<usize>,
+    losses: Vec<u16>,
     is_reno: bool,
 ) -> (Vec<u16>, Vec<u16>) {
     let mut window_size = initial_window_size;
@@ -15,7 +15,7 @@ pub fn algorithm(
     let mut window_sizes: Vec<u16> = vec![window_size];
     let mut thresholds: Vec<u16> = vec![threshold];
 
-    for cycle in 0..cycles {
+    for cycle in 0..(cycles as u16) {
         if losses.contains(&cycle) {
             threshold /= 2;
 

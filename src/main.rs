@@ -23,7 +23,7 @@ struct Cli {
         value_delimiter = ',',
         help = "An array of the cycles on which a loss occurs"
     )]
-    losses: Vec<usize>,
+    losses: Vec<u16>,
 
     #[clap(
         long,
