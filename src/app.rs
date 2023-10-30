@@ -1,4 +1,4 @@
-use crate::algorithm;
+use crate::{algorithm, to_csv};
 use eframe::egui;
 use egui_extras::{Column, TableBuilder};
 use egui_plot::{Legend, Line, LineStyle, VLine};
@@ -169,8 +169,15 @@ impl eframe::App for App {
 
             ui.horizontal(|ui| {
                 ui.label("Algorithm:");
-                ui.radio_value(&mut self.algorithm, Algorithm::Reno, "Reno");
-                ui.radio_value(&mut self.algorithm, Algorithm::Tahoe, "Tahoe");
+                if ui
+                    .radio_value(&mut self.algorithm, Algorithm::Reno, "Reno")
+                    .clicked()
+                    || ui
+                        .radio_value(&mut self.algorithm, Algorithm::Tahoe, "Tahoe")
+                        .clicked()
+                {
+                    self.update_data();
+                }
             });
 
             ui.collapsing("Edit cycles where there are losses", |ui| {
@@ -251,6 +258,79 @@ impl eframe::App for App {
                             .style(LineStyle::dashed_dense()),
                     );
                 });
+
+            ui.separator();
+
+            ui.horizontal_centered(|ui| {
+                ui.vertical_centered_justified(|ui| {
+                    TableBuilder::new(ui)
+                        .striped(true)
+                        .auto_shrink([true, true])
+                        .column(Column::auto())
+                        .column(Column::auto())
+                        .column(Column::auto())
+                        .column(Column::auto())
+                        .header(30.0, |mut header| {
+                            header.col(|ui| {
+                                ui.heading("Cycle");
+                            });
+                            header.col(|ui| {
+                                ui.heading("Window size");
+                            });
+                            header.col(|ui| {
+                                ui.heading("Threshold");
+                            });
+                            header.col(|ui| {
+                                ui.heading("Has loss?");
+                            });
+                        })
+                        .body(|mut body| {
+                            for (i, (window, threshold)) in self
+                                .window_size_data
+                                .iter()
+                                .zip(self.threshold_data.iter())
+                                .enumerate()
+                            {
+                                body.row(30.0, |mut row| {
+                                    row.col(|ui| {
+                                        ui.label(i.to_string());
+                                    });
+
+                                    row.col(|ui| {
+                                        ui.label(window[1].to_string());
+                                    });
+
+                                    row.col(|ui| {
+                                        ui.label(threshold[1].to_string());
+                                    });
+
+                                    row.col(|ui| {
+                                        ui.label(if self.losses.contains(&(i as u16)) {
+                                            "Yes"
+                                        } else {
+                                            ""
+                                        });
+                                    });
+                                });
+                            }
+                        });
+                });
+
+                ui.separator();
+
+                ui.vertical_centered_justified(|ui|{
+                    ui.push_id("CSV scroll", |ui|{
+                    egui::ScrollArea::vertical().show(ui, |ui| {
+
+                        ui.text_edit_multiline(&mut to_csv(
+                                &self.window_size_data,
+                                &self.threshold_data,
+                                &self.losses,
+                                ));
+                    });
+                    });
+                });
+            });
         });
     }
 }
