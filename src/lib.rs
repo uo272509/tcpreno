@@ -43,11 +43,7 @@ pub fn algorithm(
     (window_sizes, thresholds)
 }
 
-pub fn to_csv(
-    window_sizes: &Vec<[f64; 2]>,
-    thresholds: &Vec<[f64; 2]>,
-    losses: &Vec<u16>,
-) -> String {
+pub fn to_csv(window_sizes: &[[f64; 2]], thresholds: &[[f64; 2]], losses: &[u16]) -> String {
     let mut csv = String::new();
     csv.push_str("Cycle;Window size;Threshold;Packet losses\n");
     for (i, (window, threshold)) in window_sizes.iter().zip(thresholds.iter()).enumerate() {

@@ -318,16 +318,15 @@ impl eframe::App for App {
 
                 ui.separator();
 
-                ui.vertical_centered_justified(|ui|{
-                    ui.push_id("CSV scroll", |ui|{
-                    egui::ScrollArea::vertical().show(ui, |ui| {
-
-                        ui.text_edit_multiline(&mut to_csv(
+                ui.vertical_centered_justified(|ui| {
+                    ui.push_id("CSV scroll", |ui| {
+                        egui::ScrollArea::vertical().show(ui, |ui| {
+                            ui.text_edit_multiline(&mut to_csv(
                                 &self.window_size_data,
                                 &self.threshold_data,
                                 &self.losses,
-                                ));
-                    });
+                            ));
+                        });
                     });
                 });
             });
