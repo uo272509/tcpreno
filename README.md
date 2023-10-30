@@ -21,7 +21,7 @@ Options:
 packets are lost in the cycles 10, 14 and 20
 
 ```bash
-tcpreno --cycles 25 --threshold 8 -l 10 -l 14 -l 20 --algorithm "Reno"
+tcpreno --cycles 25 --threshold 8 -l 10,14,20 --algorithm "Reno"
 ```
 
 # Warning

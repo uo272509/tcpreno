@@ -14,7 +14,13 @@ struct Cli {
     #[clap(long, short, help = "The initial threshold")]
     threshold: u16,
 
-    #[clap(long, short, help = "An array of the cycles on which a loss occurs")]
+    #[clap(
+        long,
+        short,
+        value_parser,
+        value_delimiter = ',',
+        help = "An array of the cycles on which a loss occurs"
+    )]
     losses: Vec<usize>,
 
     #[clap(
