@@ -224,7 +224,13 @@ impl eframe::App for App {
                             row.col(|ui| {
                                 if ui.button("Add a loss").clicked() {
                                     self.losses.sort_unstable();
-                                    self.losses.push(if self.losses.is_empty() { 7 } else {self.losses[self.losses.len() - 1]} + 1);
+                                    self.losses.push(
+                                        if self.losses.is_empty() {
+                                            7
+                                        } else {
+                                            self.losses[self.losses.len() - 1]
+                                        } + 1,
+                                    );
                                     update = true;
                                 }
                             });
