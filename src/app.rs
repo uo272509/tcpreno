@@ -37,7 +37,7 @@ pub struct App {
 
 impl Default for App {
     fn default() -> Self {
-        let (data_window, data_threshold) = algorithm(1, 8, 25, vec![10, 14, 20], true);
+        let (data_window, data_threshold) = algorithm(1, 8, 25, &[10, 14, 20], true);
 
         let window_data_zipped: Vec<[f64; 2]> = (0..data_window.len())
             .zip(data_window.iter())
@@ -69,7 +69,7 @@ impl App {
         algo: Algorithm,
     ) -> Self {
         let (data_window, data_threshold) =
-            algorithm(window, threshold, cycles, losses.clone(), algo.is_reno());
+            algorithm(window, threshold, cycles, &losses, algo.is_reno());
 
         let window_data_zipped: Vec<[f64; 2]> = (0..data_window.len())
             .zip(data_window.iter())
@@ -96,7 +96,7 @@ impl App {
             self.window,
             self.threshold,
             self.cycles,
-            self.losses.clone(),
+            &self.losses,
             self.algorithm.is_reno(),
         );
 
@@ -244,7 +244,7 @@ impl eframe::App for App {
         });
 
         egui::CentralPanel::default().show(ctx, |ui| {
-            egui_plot::Plot::new("example_plot")
+            egui_plot::Plot::new("TCP Reno/Tahoe")
                 .height(ui.available_height() / 2.0)
                 .show_axes(true)
                 .legend(Legend::default())
