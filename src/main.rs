@@ -8,11 +8,7 @@ use tcpreno::App;
 #[derive(Parser, Debug)]
 #[command(author, version, about)]
 struct Cli {
-    #[clap(
-        long,
-        help = "Number of cycles to calculate",
-        default_value_t = 20
-    )]
+    #[clap(long, help = "Number of cycles to calculate", default_value_t = 20)]
     cycles: usize,
 
     #[clap(long, short, help = "The initial threshold", default_value_t = 8)]
