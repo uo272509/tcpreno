@@ -143,6 +143,8 @@ fn do_cli(args: Cli) {
 
 #[cfg(target_arch = "wasm32")]
 fn main() {
+    use eframe::egui;
+
     let web_options = eframe::WebOptions::default();
     wasm_bindgen_futures::spawn_local(async {
         eframe::WebRunner::new()
