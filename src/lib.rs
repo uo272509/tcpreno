@@ -6,7 +6,7 @@ pub fn algorithm(
     initial_window_size: u16,
     initial_threshold: u16,
     cycles: usize,
-    losses: Vec<u16>,
+    losses: &[u16],
     is_reno: bool,
 ) -> (Vec<u16>, Vec<u16>) {
     let mut window_size = initial_window_size;

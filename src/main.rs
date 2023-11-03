@@ -1,17 +1,14 @@
+// Prevents additional console window on Windows in release, DO NOT REMOVE!!
+#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
+
 use clap::{command, Parser};
-use eframe::egui;
 use tcpreno::App;
 
 #[cfg(not(target_arch = "wasm32"))]
 #[derive(Parser, Debug)]
 #[command(author, version, about)]
 struct Cli {
-    #[clap(
-        long,
-        short,
-        help = "Number of cycles to calculate",
-        default_value_t = 20
-    )]
+    #[clap(long, help = "Number of cycles to calculate", default_value_t = 20)]
     cycles: usize,
 
     #[clap(long, short, help = "The initial threshold", default_value_t = 8)]
@@ -33,11 +30,31 @@ struct Cli {
         help = "Algorithm to use: 'Tahoe' or 'Reno'"
     )]
     algorithm: String,
+
+    #[clap(
+        long,
+        short,
+        default_value_t = false,
+        help = "Avoid the GUI: output the results to stdout and as an image"
+    )]
+    cli: bool,
 }
 
 #[cfg(not(target_arch = "wasm32"))]
 fn main() -> Result<(), eframe::Error> {
     let args = Cli::parse();
+
+    if args.cli {
+        do_cli(args);
+        Ok(())
+    } else {
+        do_gui(args)
+    }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn do_gui(args: Cli) -> Result<(), eframe::Error> {
+    use eframe::egui;
 
     let options = eframe::NativeOptions {
         initial_window_size: Some(egui::vec2(1500.0, 700.0)),
@@ -45,7 +62,7 @@ fn main() -> Result<(), eframe::Error> {
     };
 
     eframe::run_native(
-        "My egui App",
+        "TCP Reno/Tahoe",
         options,
         Box::new(move |cc| {
             //Increase the font size
@@ -67,6 +84,61 @@ fn main() -> Result<(), eframe::Error> {
             ))
         }),
     )
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn do_cli(args: Cli) {
+    use plotly::{
+        common::{DashType, Line, Title},
+        layout::Axis,
+        Layout, Plot, Scatter,
+    };
+    use tcpreno::{algorithm, to_csv};
+
+    let is_reno = args.algorithm.to_ascii_lowercase().trim().eq("reno");
+
+    let window_size = 1;
+    let threshold = args.threshold;
+
+    let (window_sizes, thresholds): (Vec<u16>, Vec<u16>) =
+        algorithm(window_size, threshold, args.cycles, &args.losses, is_reno);
+
+    // Generar scatter plots de cada uno de los vectores
+    let window_size_trace =
+        Scatter::new((0..window_sizes.len()).collect(), window_sizes.clone()).name("Window size");
+    let threshold_trace = Scatter::new((0..thresholds.len()).collect(), thresholds.clone())
+        .line(Line::new().dash(DashType::DashDot))
+        .name("Threshold");
+
+    // Crear un plot
+    let layout = Layout::new()
+        .title(Title::new(&format!(
+            "{} Window Size and Threshold",
+            args.algorithm
+        )))
+        .x_axis(Axis::new().title(Title::new("Cycle")))
+        .y_axis(Axis::new().title(Title::new("Window Size / Threshold")));
+
+    let mut plot = Plot::new();
+    plot.add_trace(window_size_trace);
+    plot.add_trace(threshold_trace);
+    plot.set_layout(layout);
+
+    // Y mostrarlo
+    plot.show();
+
+    // Y además generar el csv
+    let ws: Vec<[f64; 2]> = window_sizes
+        .iter()
+        .map(|v| [0.0f64, *v as f64])
+        .collect::<Vec<[f64; 2]>>();
+
+    let ts: Vec<[f64; 2]> = thresholds
+        .iter()
+        .map(|v| [0.0f64, *v as f64])
+        .collect::<Vec<[f64; 2]>>();
+
+    println!("{}", to_csv(&ws, &ts, &args.losses));
 }
 
 #[cfg(target_arch = "wasm32")]
