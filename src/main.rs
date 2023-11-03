@@ -66,7 +66,7 @@ fn do_gui(args: Cli) -> Result<(), eframe::Error> {
     };
 
     eframe::run_native(
-        "My egui App",
+        "TCP Reno/Tahoe",
         options,
         Box::new(move |cc| {
             //Increase the font size
