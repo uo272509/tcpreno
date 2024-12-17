@@ -1,18 +1,31 @@
-<!DOCTYPE html><html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<!DOCTYPE html>
+<html lang="en">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 
 <!-- Disable zooming: -->
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 
-
+<head>
     <!-- change this to your project name -->
     <title>TCP Reno/Tahoe</title>
 
     <!-- config for our rust wasm binary. go to https://trunkrs.dev/assets/#rust for more customization -->
-    <script type="module">import init from '/tcpreno.js';init('/tcpreno_bg.wasm');</script>
-    <!-- this is the base url relative to which other urls will be constructed. trunk will insert this from the public-url option -->
-    <base href="/">
+    
+<script type="module" nonce="vRdVWGtW53KIhEGpIn1R+w==">
+import init, * as bindings from '/tcpreno.js';
+const wasm = await init('/tcpreno_bg.wasm');
 
-    <link rel="icon" href="/favicon.ico">
+
+window.wasmBindings = bindings;
+
+
+dispatchEvent(new CustomEvent("TrunkApplicationStarted", {detail: {wasm}}));
+
+</script>
+    <!-- this is the base url relative to which other urls will be constructed. trunk will insert this from the public-url option -->
+    <base href="/" />
+
+    <link rel="icon" href="/favicon.ico" integrity="sha384&#x2D;zlzxZVmW51Grr3hNtN3ke4rIDoqMw9&#x2B;hQD0tF9Yh8RAAgqvJM6McDmtMikyyNhdI"/>
 
 
     
@@ -109,9 +122,7 @@
             }
         }
     </style>
-
-<link rel="preload" href="/tcpreno_bg.wasm" as="fetch" type="application/wasm" crossorigin="">
-<link rel="modulepreload" href="/tcpreno.js"></head>
+<link rel="modulepreload" href="/tcpreno.js" crossorigin=anonymous integrity="sha384-XWkelAZBASryuZMchLCqkq5tuVhAabZDWGVCTdHNYCnh+5SyGt8LqBQrldJDJt9f"><link rel="preload" href="/tcpreno_bg.wasm" crossorigin=anonymous integrity="sha384-XGe+GPMwbwqxgqwJzYK6ZD1Ku9nDFc6CF5WSWXiIlm9ZKz7VC28blekcHm0ri+P4" as="fetch" type="application/wasm"></head>
 
 <body>
     <!-- The WASM code will resize the canvas dynamically -->
@@ -128,9 +139,8 @@
             });
         }
     </script>
+</body>
 
+</html>
 
-
-
-
-</body></html><!-- Powered by egui: https://github.com/emilk/egui/ -->
+<!-- Powered by egui: https://github.com/emilk/egui/ -->
